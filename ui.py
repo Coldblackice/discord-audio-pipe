@@ -20,12 +20,12 @@ class UI():
         tk.Label(self.root, text='Server', fg='black').grid(row=1, column=1)
         tk.Label(self.root, text='Channel', fg='black').grid(row=1, column=2)
 
-        device_options = sound.query_devices()
+        self.device_options = self.stream.query_devices()
         self.dv = tk.StringVar(self.root)
-        self.dv.trace('w', lambda *args: self.change_device(device_options, self.dv))
-        self.dv.set(device_options.get(0))
-        device = tk.OptionMenu(self.root, self.dv, *device_options)
-        device.grid(row=2, column=0)
+        self.dv.trace('w', lambda *args: self.change_device(self.device_options, self.dv))
+        self.dv.set(self.device_options.get(0))
+        self.device = tk.OptionMenu(self.root, self.dv, *self.device_options)
+        self.device.grid(row=2, column=0)
 
         self.sv = tk.StringVar(self.root)
         self.sv.trace('w', lambda *args: asyncio.ensure_future(self.change_server()))
@@ -44,7 +44,12 @@ class UI():
         self.mv = tk.StringVar(self.root)
         self.mv.set('Mute')
         self.mute = tk.Button(self.root, textvariable=self.mv, command=self.toggle_mute)
-        self.mute.grid(row=2, column=3, padx=5)
+        self.mute.grid(row=2, column=3, padx=2)
+        
+        self.rv = tk.StringVar(self.root)
+        self.rv.set('Refresh Devices')
+        self.refresh = tk.Button(self.root, textvariable=self.rv, command=lambda *args: asyncio.ensure_future(self.set_devices()))
+        self.refresh.grid(row=2, column=4, padx=2)
         
         self.root.protocol('WM_DELETE_WINDOW', self.exit)
 
@@ -141,6 +146,23 @@ class UI():
             escaped = str(idx) + '. ' + self.deEmojify(channel.name)
             menu.add_command(label=escaped, command=lambda value=escaped: self.cv.set(value))
             self.channel_map[escaped] = channel
+ 
+    async def set_devices(self):
+        self.dv.set('None')
+    
+        if (self.voice is not None):
+            self.voice.stop()
+            await self.voice.disconnect()
+            self.voice = None
+            self.cv.set('None')
+
+        devices = self.stream.query_devices(hard_refresh=True)
+
+        menu = self.device['menu']
+        menu.delete(0, 'end') 
+
+        for idx, device in enumerate(devices):
+            menu.add_command(label=device, command=lambda value=device: self.dv.set(value))
  
     def toggle_mute(self):
         try:

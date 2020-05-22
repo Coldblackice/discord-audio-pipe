@@ -1,5 +1,6 @@
 import numpy as np
 import sounddevice as sd
+import logging
 
 MME = 0
 sd.default.channels = 2
@@ -20,22 +21,36 @@ class PCMStream:
         return data.tobytes()
 
     def change_device(self, num):
-        if (self.stream is not None):
-            self.stream.stop()
-            self.stream.close()
+        try:
+            if (self.stream is not None):
+                self.stream.stop()
+                self.stream.close()
 
-        self.stream = sd.InputStream(device=num)
-        self.stream.start()
+            self.stream = sd.InputStream(device=num)
+            self.stream.start()
+            
+        except:
+            logging.exception('Error on change_device')
+            
+    def query_devices(self, hard_refresh=False):
+        try:
+            # portaudio limitation, have to reinit to get hardware changes
+            if (hard_refresh):
+                if (self.stream is not None):
+                    self.stream.stop()
+                    self.stream.close()
 
-def query_devices():
-    index = 0
-    options = {}
+                sd._terminate()
+                sd._initialize()
 
-    for item in sd.query_devices():
-        # pip version only supports MME api
-        if (item.get('max_input_channels') > 0 and item.get('hostapi') == MME):
-            options[item.get('name')] = index
+            options = {}
 
-        index += 1
+            for index, item in enumerate(sd.query_devices()):
+                # pip version only supports MME api
+                if (item.get('max_input_channels') > 0 and item.get('hostapi') == MME):
+                    options[item.get('name')] = index
 
-    return options
+            return options
+            
+        except:
+            logging.exception('Error on query_devices')
