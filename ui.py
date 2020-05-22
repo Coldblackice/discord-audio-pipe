@@ -59,6 +59,8 @@ class UI():
 
     def change_device(self, options, dv):
         try:
+            self.mv.set('Mute')
+        
             if (dv.get() != 'None'):
                 if (self.voice is not None):
                     self.voice.stop()
@@ -80,6 +82,8 @@ class UI():
 
     async def change_server(self):
         try:
+            self.mv.set('Mute')
+        
             s_name = self.sv.get()
 
             if (s_name != 'None'):
@@ -98,6 +102,8 @@ class UI():
         
     async def change_channel(self):
         try:
+            self.mv.set('Mute')
+        
             s_name = self.sv.get()
             c_name = self.cv.get()
         
@@ -141,7 +147,6 @@ class UI():
         menu.add_command(label='None', command=lambda value='None': self.cv.set(value))    
         self.cv.set('None')
         self.channel_map.clear()
-        self.mv.set('Mute')
 
         for idx, channel in enumerate(channels):
             escaped = str(idx) + '. ' + self.deEmojify(channel.name)
@@ -150,7 +155,6 @@ class UI():
  
     async def set_devices(self):
         self.dv.set('None')
-        self.mv.set('Mute')
     
         if (self.voice is not None):
             self.voice.stop()
