@@ -141,6 +141,7 @@ class UI():
         menu.add_command(label='None', command=lambda value='None': self.cv.set(value))    
         self.cv.set('None')
         self.channel_map.clear()
+        self.mv.set('Mute')
 
         for idx, channel in enumerate(channels):
             escaped = str(idx) + '. ' + self.deEmojify(channel.name)
@@ -149,6 +150,7 @@ class UI():
  
     async def set_devices(self):
         self.dv.set('None')
+        self.mv.set('Mute')
     
         if (self.voice is not None):
             self.voice.stop()
