@@ -31,7 +31,7 @@ class PCMStream:
             
         except:
             logging.exception('Error on change_device')
-            
+
     def query_devices(self, hard_refresh=False):
         try:
             # portaudio limitation, have to reinit to get hardware changes

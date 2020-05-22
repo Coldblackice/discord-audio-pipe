@@ -13,43 +13,51 @@ class UI():
         self.voice = None
         self.stream = sound.PCMStream()
         
+        menubar = tk.Menu(self.root)
+        optionmenu = tk.Menu(menubar, tearoff=0)
+        optionmenu.add_command(
+            label="Refresh Devices", 
+            command=lambda *args: asyncio.ensure_future(self.set_devices())
+        )
+        optionmenu.add_command(
+            label="Refresh Servers", 
+            command=lambda *args: asyncio.ensure_future(self.set_servers([guild for guild in self.bot.guilds]))
+        )
+        menubar.add_cascade(label="Options", menu=optionmenu)
+        self.root.config(menu=menubar)
+
         self.cred = tk.Label(self.root, text='Connecting...', fg='black')
         self.cred.grid(row=0, column=0, columnspan=2, sticky='W')
         
-        tk.Label(self.root, text='Device', fg='black').grid(row=1, column=1)
-        tk.Label(self.root, text='Server', fg='black').grid(row=1, column=2)
-        tk.Label(self.root, text='Channel', fg='black').grid(row=1, column=3)
-
-        self.rv = tk.StringVar(self.root)
-        self.rv.set('Refresh')
-        self.refresh = tk.Button(self.root, textvariable=self.rv, command=lambda *args: asyncio.ensure_future(self.set_devices()))
-        self.refresh.grid(row=2, column=0, padx=2)
+        tk.Label(self.root, text='Device', fg='black').grid(row=1, column=0)
+        tk.Label(self.root, text='Server', fg='black').grid(row=1, column=1)
+        tk.Label(self.root, text='Channel', fg='black').grid(row=1, column=2)
 
         self.device_options = self.stream.query_devices()
         self.dv = tk.StringVar(self.root)
         self.dv.trace('w', lambda *args: self.change_device(self.device_options, self.dv))
         self.dv.set(self.device_options.get(0))
         self.device = tk.OptionMenu(self.root, self.dv, *self.device_options)
-        self.device.grid(row=2, column=1)
+        self.device.grid(row=2, column=0)
 
         self.sv = tk.StringVar(self.root)
         self.sv.trace('w', lambda *args: asyncio.ensure_future(self.change_server()))
         self.sv.set('None')
         self.server = tk.OptionMenu(self.root, self.sv, 'None')
-        self.server.grid(row=2, column=2)
+        self.server.grid(row=2, column=1)
         self.server_map = {}
 
         self.cv = tk.StringVar(self.root)
         self.cv.trace("w", lambda *args: asyncio.ensure_future(self.change_channel()))
         self.cv.set('None')
         self.channel = tk.OptionMenu(self.root, self.cv, 'None')
-        self.channel.grid(row=2, column=3)
+        self.channel.grid(row=2, column=2)
         self.channel_map = {}
 
         self.mv = tk.StringVar(self.root)
         self.mv.set('Mute')
         self.mute = tk.Button(self.root, textvariable=self.mv, command=self.toggle_mute)
-        self.mute.grid(row=2, column=4, padx=2)
+        self.mute.grid(row=2, column=3, padx=2)
         
         self.root.protocol('WM_DELETE_WINDOW', self.exit)
 
@@ -135,12 +143,15 @@ class UI():
 
     def set_servers(self, servers):
         menu = self.server['menu']
+        menu.delete(0, 'end')
+        menu.add_command(label='None', command=lambda value='None': self.sv.set(value))
+        self.server_map.clear()
         
         for idx, server in enumerate(servers):
             escaped = str(idx) + '. ' + self.deEmojify(server.name)
             menu.add_command(label=escaped, command=lambda value=escaped: self.sv.set(value))
             self.server_map[escaped] = server
-        
+
     def set_channels(self, channels):
         menu = self.channel['menu']
         menu.delete(0, 'end')
