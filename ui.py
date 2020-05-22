@@ -16,40 +16,40 @@ class UI():
         self.cred = tk.Label(self.root, text='Connecting...', fg='black')
         self.cred.grid(row=0, column=0, columnspan=2, sticky='W')
         
-        tk.Label(self.root, text='Device', fg='black').grid(row=1, column=0)
-        tk.Label(self.root, text='Server', fg='black').grid(row=1, column=1)
-        tk.Label(self.root, text='Channel', fg='black').grid(row=1, column=2)
+        tk.Label(self.root, text='Device', fg='black').grid(row=1, column=1)
+        tk.Label(self.root, text='Server', fg='black').grid(row=1, column=2)
+        tk.Label(self.root, text='Channel', fg='black').grid(row=1, column=3)
+
+        self.rv = tk.StringVar(self.root)
+        self.rv.set('Refresh')
+        self.refresh = tk.Button(self.root, textvariable=self.rv, command=lambda *args: asyncio.ensure_future(self.set_devices()))
+        self.refresh.grid(row=2, column=0, padx=2)
 
         self.device_options = self.stream.query_devices()
         self.dv = tk.StringVar(self.root)
         self.dv.trace('w', lambda *args: self.change_device(self.device_options, self.dv))
         self.dv.set(self.device_options.get(0))
         self.device = tk.OptionMenu(self.root, self.dv, *self.device_options)
-        self.device.grid(row=2, column=0)
+        self.device.grid(row=2, column=1)
 
         self.sv = tk.StringVar(self.root)
         self.sv.trace('w', lambda *args: asyncio.ensure_future(self.change_server()))
         self.sv.set('None')
         self.server = tk.OptionMenu(self.root, self.sv, 'None')
-        self.server.grid(row=2, column=1)
+        self.server.grid(row=2, column=2)
         self.server_map = {}
 
         self.cv = tk.StringVar(self.root)
         self.cv.trace("w", lambda *args: asyncio.ensure_future(self.change_channel()))
         self.cv.set('None')
         self.channel = tk.OptionMenu(self.root, self.cv, 'None')
-        self.channel.grid(row=2, column=2)
+        self.channel.grid(row=2, column=3)
         self.channel_map = {}
 
         self.mv = tk.StringVar(self.root)
         self.mv.set('Mute')
         self.mute = tk.Button(self.root, textvariable=self.mv, command=self.toggle_mute)
-        self.mute.grid(row=2, column=3, padx=2)
-        
-        self.rv = tk.StringVar(self.root)
-        self.rv.set('Refresh Devices')
-        self.refresh = tk.Button(self.root, textvariable=self.rv, command=lambda *args: asyncio.ensure_future(self.set_devices()))
-        self.refresh.grid(row=2, column=4, padx=2)
+        self.mute.grid(row=2, column=4, padx=2)
         
         self.root.protocol('WM_DELETE_WINDOW', self.exit)
 
@@ -59,9 +59,9 @@ class UI():
 
     def change_device(self, options, dv):
         try:
-            self.mv.set('Mute')
-        
             if (dv.get() != 'None'):
+                self.mv.set('Mute')
+            
                 if (self.voice is not None):
                     self.voice.stop()
                     self.stream.change_device(options.get(dv.get()))
